@@ -18,18 +18,24 @@ class HttpAdapter {
 class HttpClientSpy extends Mock implements Dio {}
 
 void main() {
-  setUp(() {});
+  late String url;
+  late HttpClientSpy client;
+  late HttpAdapter sut;
+
+  setUp(() {
+    url = faker.internet.httpUrl();
+    client = HttpClientSpy();
+    sut = HttpAdapter(client: client);
+  });
 
   group('post', () {
     test('should call post with correct values', () async {
-      final url = faker.internet.httpUrl();
-      final client = HttpClientSpy();
-
       when(() => client.post(url, options: any(named: 'options')))
           .thenAnswer((invocation) async => Response(data: {}, statusCode: 200, requestOptions: RequestOptions(path: url)));
-      final sut = HttpAdapter(client: client);
+
       await sut(
           url: url, method: MethodType.post, headers: {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'});
+
       verify(() => client.post(url, options: any(named: 'options')));
     });
   });
