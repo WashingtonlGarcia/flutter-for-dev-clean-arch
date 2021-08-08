@@ -34,7 +34,7 @@ void main() {
     when(() => httpClient.request(url: url, method: MethodType.get)).thenAnswer((invocation) async {});
 
     await sut();
-    
+
     verify(() => httpClient.request(url: url, method: MethodType.get));
   });
 }
