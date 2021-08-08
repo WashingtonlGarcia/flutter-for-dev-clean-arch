@@ -1,3 +1,5 @@
+import 'package:flutter_for_dev_clean_arch/data/models/account_model.dart';
+
 import '../../domain/entities/entities.dart' show AccountEntity;
 import '../../domain/helpers/helpers.dart';
 import '../../domain/usecases/usecases.dart' show Authentication, AuthenticationParams;
@@ -10,10 +12,10 @@ class RemoteAuthentication implements Authentication<RemoteAuthenticationParams>
   RemoteAuthentication({required this.httpClient, required this.url});
 
   @override
-  Future<AccountEntity> call({required RemoteAuthenticationParams params}) async {
+  Future<AccountModel> call({required RemoteAuthenticationParams params}) async {
     try {
-      await httpClient(url: url, method: MethodType.get, body: params.toMap());
-      return AccountEntity(token: '');
+      final response = await httpClient(url: url, method: MethodType.get, body: params.toMap());
+      return AccountModel.fromMap(map: response);
     } on HttpError catch (error) {
       throw error == HttpError.unathorized ? DomainError.invalidCredentials : DomainError.unexpectedError;
     }

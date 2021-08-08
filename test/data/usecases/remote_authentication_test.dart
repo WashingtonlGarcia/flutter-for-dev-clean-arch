@@ -1,5 +1,6 @@
 import 'package:faker/faker.dart';
 import 'package:flutter_for_dev_clean_arch/data/http/http.dart';
+import 'package:flutter_for_dev_clean_arch/data/models/account_model.dart';
 import 'package:flutter_for_dev_clean_arch/data/usecases/remote_authentication.dart';
 import 'package:flutter_for_dev_clean_arch/domain/helpers/domain_error.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,7 +12,7 @@ void main() {
   late HttpClient httpClient;
   late RemoteAuthentication sut;
   late RemoteAuthenticationParams params;
-
+  
   setUp(() {
     httpClient = HttpClientSpy();
     final url = faker.internet.httpUrl();
@@ -20,7 +21,7 @@ void main() {
   });
 
   test('should call HttpClient with correct values', () async {
-    when(() => httpClient(url: any(named: 'url'), method: MethodType.get, body: params.toMap())).thenAnswer((invocation) async {});
+    when(() => httpClient(url: any(named: 'url'), method: MethodType.get, body: params.toMap())).thenAnswer((invocation) async => {'accessToken': faker.guid.guid(), 'name': faker.person.name()});
 
     await sut(params: params);
 
@@ -53,6 +54,18 @@ void main() {
     final result = sut(params: params);
 
     expect(result, throwsA(DomainError.invalidCredentials));
+
+    verify(() => httpClient(url: any(named: 'url'), method: MethodType.get, body: params.toMap()));
+  });
+
+  test('should return an Account if HttpClient returns 200', () async {
+    final Map<String,dynamic> map ={'accessToken': faker.guid.guid(), 'name': faker.person.name()};
+    when(() => httpClient(url: any(named: 'url'), method: MethodType.get, body: params.toMap()))
+        .thenAnswer((invocation) async => map);
+
+    final result = await sut(params: params);
+
+    expect(result.token, AccountModel.fromMap(map: map).token);
 
     verify(() => httpClient(url: any(named: 'url'), method: MethodType.get, body: params.toMap()));
   });
