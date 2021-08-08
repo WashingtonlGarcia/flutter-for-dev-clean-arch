@@ -1,7 +1,7 @@
 import '../../domain/entities/entities.dart' show AccountEntity;
+import '../../domain/helpers/helpers.dart';
 import '../../domain/usecases/usecases.dart' show Authentication, AuthenticationParams;
-
-import '../http/http_client.dart';
+import '../http/http.dart';
 
 class RemoteAuthentication implements Authentication<RemoteAuthenticationParams> {
   final HttpClient httpClient;
@@ -11,8 +11,12 @@ class RemoteAuthentication implements Authentication<RemoteAuthenticationParams>
 
   @override
   Future<AccountEntity> call({required RemoteAuthenticationParams params}) async {
-    await httpClient(url: url, method: MethodType.get, body: params.toMap());
-    return AccountEntity(token: '');
+    try {
+      await httpClient(url: url, method: MethodType.get, body: params.toMap());
+      return AccountEntity(token: '');
+    } on HttpError {
+      throw DomainError.unexpectedError;
+    }
   }
 }
 
