@@ -1,16 +1,14 @@
 import '../entities/account_entity.dart';
 
-abstract class Authentication {
-  Future<AccountEntity> call({required AuthenticationParams params});
+abstract class Authentication<Params extends AuthenticationParams> {
+  Future<AccountEntity> call({required Params params});
 }
 
-class AuthenticationParams {
+abstract class AuthenticationParams {
   final String email;
   final String password;
 
   const AuthenticationParams({required this.email, required this.password});
 
-  Map<String, dynamic> toMap() {
-    return {'email': email, 'password': password};
-  }
+  Map<String, dynamic> toMap();
 }
