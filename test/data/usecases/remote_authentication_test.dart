@@ -22,13 +22,19 @@ abstract class HttpClient {
 class HttpClientSpy extends Mock implements HttpClient {}
 
 void main() {
+  late HttpClient httpClient;
+  late String url;
+  late RemoteAuthentication sut;
+  setUp(() {
+    httpClient = HttpClientSpy();
+    url = faker.internet.httpUrl();
+    sut = RemoteAuthentication(httpClient: httpClient, url: url);
+  });
   test('should call HttpClient with correct values', () async {
-    final httpClient = HttpClientSpy();
-    final url = faker.internet.httpUrl();
-    when(() => httpClient.request(url: url,method: MethodType.get)).thenAnswer((invocation) async {});
+    when(() => httpClient.request(url: url, method: MethodType.get)).thenAnswer((invocation) async {});
 
-    final sut = RemoteAuthentication(httpClient: httpClient, url: url);
     await sut();
-    verify(() => httpClient.request(url: url,method: MethodType.get));
+    
+    verify(() => httpClient.request(url: url, method: MethodType.get));
   });
 }
