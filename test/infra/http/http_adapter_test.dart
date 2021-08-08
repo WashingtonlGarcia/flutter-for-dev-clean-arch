@@ -9,8 +9,9 @@ class HttpAdapter {
 
   HttpAdapter({required this.client});
 
-  Future<void> call({required String url, required MethodType method, Map<String, dynamic>? body}) async {
-    await client.post(url);
+  Future<void> call({required String url, required MethodType method, Map<String, dynamic>? body, Map<String, dynamic>? headers}) async {
+    await client.post(url,
+        options: Options(headers: headers ?? {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'}));
   }
 }
 
@@ -23,11 +24,13 @@ void main() {
     test('should call post with correct values', () async {
       final url = faker.internet.httpUrl();
       final client = HttpClientSpy();
-      when(() => client.post(url))
-          .thenAnswer((invocation) async => Response(data: {}, statusCode: 200, requestOptions: RequestOptions(path: '')));
+
+      when(() => client.post(url, options: any(named: 'options')))
+          .thenAnswer((invocation) async => Response(data: {}, statusCode: 200, requestOptions: RequestOptions(path: url)));
       final sut = HttpAdapter(client: client);
-      await sut(url: url, method: MethodType.post);
-      verify(() => client.post(url));
+      await sut(
+          url: url, method: MethodType.post, headers: {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'});
+      verify(() => client.post(url, options: any(named: 'options')));
     });
   });
 }
