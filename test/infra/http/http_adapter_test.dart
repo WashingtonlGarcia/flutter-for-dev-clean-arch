@@ -31,7 +31,7 @@ void main() {
   group('post', () {
     test('should call post with correct values', () async {
       when(() => client.post(url, options: any(named: 'options'), data: any(named: 'data')))
-          .thenAnswer((invocation) async => Response(data: {}, statusCode: 200, requestOptions: RequestOptions(path: url)));
+          .thenAnswer((invocation) async => Response(requestOptions: RequestOptions(path: '')));
 
       await sut(
           url: url,
@@ -40,6 +40,16 @@ void main() {
           headers: {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'});
 
       verify(() => client.post(url, data: {'any_key': 'any_value'}, options: any(named: 'options')));
+    });
+
+    test('should call post with without body', () async {
+      when(() => client.post(url, options: any(named: 'options'), data: any(named: 'data')))
+          .thenAnswer((invocation) async => Response(requestOptions: RequestOptions(path: '')));
+
+      await sut(
+          url: url, method: MethodType.post, headers: {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'});
+
+      verify(() => client.post(url, options: any(named: 'options')));
     });
   });
 }
