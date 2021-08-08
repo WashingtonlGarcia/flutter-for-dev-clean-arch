@@ -69,4 +69,16 @@ void main() {
 
     verify(() => httpClient(url: any(named: 'url'), method: MethodType.get, body: params.toMap()));
   });
+
+  test('should return an Account if HttpClient returns 200 with invalid data', () async {
+    final Map<String,dynamic> map ={'invalid': faker.guid.guid(), 'name': faker.person.name()};
+    when(() => httpClient(url: any(named: 'url'), method: MethodType.get, body: params.toMap()))
+        .thenAnswer((invocation) async => map);
+
+    final result =  sut(params: params);
+
+    expect(result, throwsA(DomainError.unexpectedError));
+
+    verify(() => httpClient(url: any(named: 'url'), method: MethodType.get, body: params.toMap()));
+  });
 }
