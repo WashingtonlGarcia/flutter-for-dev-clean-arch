@@ -12,73 +12,75 @@ void main() {
   late HttpClient httpClient;
   late RemoteAuthentication sut;
   late RemoteAuthenticationParams params;
+  late Map<String, dynamic> validData;
+  late Map<String, dynamic> invalidData;
+
+  When mockRequest() => when(() => httpClient(url: any(named: 'url'), method: MethodType.get, body: any(named: 'body')));
+  void mockHttpSuccess({required Map<String, dynamic> data}) => mockRequest().thenAnswer((invocation) async => data);
+  void mockHttpFailure({required HttpError error}) => mockRequest().thenThrow(error);
+  void verifyHttpClientMethodGet() => verify(() => httpClient(url: any(named: 'url'), method: MethodType.get, body: params.toMap()));
 
   setUp(() {
     httpClient = HttpClientSpy();
     final url = faker.internet.httpUrl();
     params = RemoteAuthenticationParams(password: faker.randomGenerator.string(6), email: faker.internet.email());
     sut = RemoteAuthentication(httpClient: httpClient, url: url);
+    validData = {'accessToken': faker.guid.guid(), 'name': faker.person.name()};
+    invalidData = {'invalid': 'invalid_value'};
+    mockHttpSuccess(data: validData);
   });
 
   test('should call HttpClient with correct values', () async {
-    when(() => httpClient(url: any(named: 'url'), method: MethodType.get, body: params.toMap())).thenAnswer((invocation) async => {'accessToken': faker.guid.guid(), 'name': faker.person.name()});
-
     await sut(params: params);
 
-    verify(() => httpClient(url: any(named: 'url'), method: MethodType.get, body: params.toMap()));
+    verifyHttpClientMethodGet();
   });
 
   test('should throw UnexpectedError if HttpClient returns 400', () {
-    when(() => httpClient(url: any(named: 'url'), method: MethodType.get, body: params.toMap())).thenThrow(HttpError.badRequest);
+    mockHttpFailure(error: HttpError.badRequest);
 
     final result = sut(params: params);
 
     expect(result, throwsA(DomainError.unexpectedError));
 
-    verify(() => httpClient(url: any(named: 'url'), method: MethodType.get, body: params.toMap()));
+    verifyHttpClientMethodGet();
   });
 
   test('should throw UnexpectedError if HttpClient returns 404', () {
-    when(() => httpClient(url: any(named: 'url'), method: MethodType.get, body: params.toMap())).thenThrow(HttpError.notFound);
+    mockHttpFailure(error: HttpError.notFound);
 
     final result = sut(params: params);
 
     expect(result, throwsA(DomainError.unexpectedError));
 
-    verify(() => httpClient(url: any(named: 'url'), method: MethodType.get, body: params.toMap()));
+    verifyHttpClientMethodGet();
   });
 
   test('should throw InvalidCredentialError if HttpClient returns 401', () {
-    when(() => httpClient(url: any(named: 'url'), method: MethodType.get, body: params.toMap())).thenThrow(HttpError.unathorized);
+    mockHttpFailure(error: HttpError.unathorized);
 
     final result = sut(params: params);
 
     expect(result, throwsA(DomainError.invalidCredentials));
 
-    verify(() => httpClient(url: any(named: 'url'), method: MethodType.get, body: params.toMap()));
+    verifyHttpClientMethodGet();
   });
 
   test('should return an Account if HttpClient returns 200', () async {
-    final Map<String,dynamic> map ={'accessToken': faker.guid.guid(), 'name': faker.person.name()};
-    when(() => httpClient(url: any(named: 'url'), method: MethodType.get, body: params.toMap()))
-        .thenAnswer((invocation) async => map);
-
     final result = await sut(params: params);
 
-    expect(result.token, RemoteAccountModel.fromMap(map: map).token);
+    expect(result.token, RemoteAccountModel.fromMap(map: validData).token);
 
-    verify(() => httpClient(url: any(named: 'url'), method: MethodType.get, body: params.toMap()));
+    verifyHttpClientMethodGet();
   });
 
   test('should return an Account if HttpClient returns 200 with invalid data', () async {
-    final Map<String,dynamic> map ={'invalid': faker.guid.guid(), 'name': faker.person.name()};
-    when(() => httpClient(url: any(named: 'url'), method: MethodType.get, body: params.toMap()))
-        .thenAnswer((invocation) async => map);
+    mockHttpSuccess(data: invalidData);
 
-    final result =  sut(params: params);
+    final result = sut(params: params);
 
     expect(result, throwsA(DomainError.unexpectedError));
 
-    verify(() => httpClient(url: any(named: 'url'), method: MethodType.get, body: params.toMap()));
+    verifyHttpClientMethodGet();
   });
 }
