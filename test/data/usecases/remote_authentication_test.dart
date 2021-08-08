@@ -1,6 +1,6 @@
 import 'package:faker/faker.dart';
 import 'package:flutter_for_dev_clean_arch/data/http/http.dart';
-import 'package:flutter_for_dev_clean_arch/data/models/account_model.dart';
+import 'package:flutter_for_dev_clean_arch/data/models/remote_account_model.dart';
 import 'package:flutter_for_dev_clean_arch/data/usecases/remote_authentication.dart';
 import 'package:flutter_for_dev_clean_arch/domain/helpers/domain_error.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -12,7 +12,7 @@ void main() {
   late HttpClient httpClient;
   late RemoteAuthentication sut;
   late RemoteAuthenticationParams params;
-  
+
   setUp(() {
     httpClient = HttpClientSpy();
     final url = faker.internet.httpUrl();
@@ -65,7 +65,7 @@ void main() {
 
     final result = await sut(params: params);
 
-    expect(result.token, AccountModel.fromMap(map: map).token);
+    expect(result.token, RemoteAccountModel.fromMap(map: map).token);
 
     verify(() => httpClient(url: any(named: 'url'), method: MethodType.get, body: params.toMap()));
   });
