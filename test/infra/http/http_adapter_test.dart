@@ -11,7 +11,7 @@ class HttpAdapter {
 
   Future<void> call({required String url, required MethodType method, Map<String, dynamic>? body, Map<String, dynamic>? headers}) async {
     await client.post(url,
-        options: Options(headers: headers ?? {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'}));
+        data: body, options: Options(headers: headers ?? {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'}));
   }
 }
 
@@ -30,13 +30,16 @@ void main() {
 
   group('post', () {
     test('should call post with correct values', () async {
-      when(() => client.post(url, options: any(named: 'options')))
+      when(() => client.post(url, options: any(named: 'options'), data: any(named: 'data')))
           .thenAnswer((invocation) async => Response(data: {}, statusCode: 200, requestOptions: RequestOptions(path: url)));
 
       await sut(
-          url: url, method: MethodType.post, headers: {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'});
+          url: url,
+          method: MethodType.post,
+          body: {'any_key': 'any_value'},
+          headers: {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'});
 
-      verify(() => client.post(url, options: any(named: 'options')));
+      verify(() => client.post(url, data: {'any_key': 'any_value'}, options: any(named: 'options')));
     });
   });
 }
