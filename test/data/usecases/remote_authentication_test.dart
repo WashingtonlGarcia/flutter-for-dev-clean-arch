@@ -46,4 +46,14 @@ void main() {
 
     verify(() => httpClient(url: any(named: 'url'), method: MethodType.get, body: params.toMap()));
   });
+
+  test('should throw UnexpectedError if HttpClient returns 500', () {
+    when(() => httpClient(url: any(named: 'url'), method: MethodType.get, body: params.toMap())).thenThrow(HttpError.serverError);
+
+    final result = sut(params: params);
+
+    expect(result, throwsA(DomainError.unexpectedError));
+
+    verify(() => httpClient(url: any(named: 'url'), method: MethodType.get, body: params.toMap()));
+  });
 }
