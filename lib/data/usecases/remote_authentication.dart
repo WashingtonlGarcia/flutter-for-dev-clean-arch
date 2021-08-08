@@ -14,8 +14,8 @@ class RemoteAuthentication implements Authentication<RemoteAuthenticationParams>
     try {
       await httpClient(url: url, method: MethodType.get, body: params.toMap());
       return AccountEntity(token: '');
-    } on HttpError {
-      throw DomainError.unexpectedError;
+    } on HttpError catch (error) {
+      throw error == HttpError.unathorized ? DomainError.invalidCredentials : DomainError.unexpectedError;
     }
   }
 }
