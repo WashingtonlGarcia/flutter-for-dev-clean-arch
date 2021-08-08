@@ -9,12 +9,12 @@ class HttpClientSpy extends Mock implements HttpClient {}
 
 void main() {
   late HttpClient httpClient;
-  late String url;
   late RemoteAuthentication sut;
   late RemoteAuthenticationParams params;
+
   setUp(() {
     httpClient = HttpClientSpy();
-    url = faker.internet.httpUrl();
+    final url = faker.internet.httpUrl();
     params = RemoteAuthenticationParams(password: faker.randomGenerator.string(6), email: faker.internet.email());
     sut = RemoteAuthentication(httpClient: httpClient, url: url);
   });
@@ -29,6 +29,16 @@ void main() {
 
   test('should throw UnexpectedError if HttpClient returns 400', () {
     when(() => httpClient(url: any(named: 'url'), method: MethodType.get, body: params.toMap())).thenThrow(HttpError.badRequest);
+
+    final result = sut(params: params);
+
+    expect(result, throwsA(DomainError.unexpectedError));
+
+    verify(() => httpClient(url: any(named: 'url'), method: MethodType.get, body: params.toMap()));
+  });
+
+  test('should throw UnexpectedError if HttpClient returns 404', () {
+    when(() => httpClient(url: any(named: 'url'), method: MethodType.get, body: params.toMap())).thenThrow(HttpError.notFound);
 
     final result = sut(params: params);
 
