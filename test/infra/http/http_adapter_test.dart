@@ -83,5 +83,17 @@ void main() {
 
       verifyPostMethod();
     });
+
+
+    test('should return null if post returns 204 with no data', () async {
+      requestSuccess(data: null, statusCode: 204);
+
+      final result = await sut(
+          url: url, method: MethodType.post, headers: {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'});
+
+      expect(result, null);
+
+      verifyPostMethod();
+    });
   });
 }
