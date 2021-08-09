@@ -4,14 +4,18 @@ import 'package:flutter_for_dev_clean_arch/data/http/http.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class HttpAdapter {
+class HttpAdapter implements HttpClient {
   final Dio client;
 
   HttpAdapter({required this.client});
 
-  Future<void> call({required String url, required MethodType method, Map<String, dynamic>? body, Map<String, dynamic>? headers}) async {
-    await client.post(url,
-        data: body, options: Options(headers: headers ?? {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'}));
+  @override
+  Future<Map<String, dynamic>> call(
+      {required String url, required MethodType method, Map<String, dynamic>? body, Map<String, dynamic>? headers}) async {
+    return (await client.post(url,
+            data: body,
+            options: Options(headers: headers ?? {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'})))
+        .data as Map<String, dynamic>;
   }
 }
 
@@ -31,7 +35,7 @@ void main() {
   group('post', () {
     test('should call post with correct values', () async {
       when(() => client.post(url, options: any(named: 'options'), data: any(named: 'data')))
-          .thenAnswer((invocation) async => Response(requestOptions: RequestOptions(path: '')));
+          .thenAnswer((invocation) async => Response(data: {'any_key': 'any_value'}, requestOptions: RequestOptions(path: '')));
 
       await sut(
           url: url,
@@ -43,12 +47,27 @@ void main() {
     });
 
     test('should call post with without body', () async {
-      when(() => client.post(url, options: any(named: 'options'), data: any(named: 'data')))
-          .thenAnswer((invocation) async => Response(requestOptions: RequestOptions(path: '')));
+      when(() => client.post(any(), options: any(named: 'options'), data: any(named: 'data')))
+          .thenAnswer((invocation) async => Response(data: {'any_key': 'any_value'}, requestOptions: RequestOptions(path: '')));
 
       await sut(
           url: url, method: MethodType.post, headers: {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'});
 
+      verify(() => client.post(url, options: any(named: 'options')));
+    });
+
+    test('should return data if post returns 200', () async {
+      when(() => client.post(any(), options: any(named: 'options'), data: any(named: 'data'))).thenAnswer((invocation) async => Response(
+          data: {'any_key': 'any_value'},
+          statusCode: 200,
+          requestOptions: RequestOptions(
+            path: '',
+          )));
+
+      final result = await sut(
+          url: url, method: MethodType.post, headers: {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'});
+
+      expect(result, {'any_key': 'any_value'});
       verify(() => client.post(url, options: any(named: 'options')));
     });
   });
