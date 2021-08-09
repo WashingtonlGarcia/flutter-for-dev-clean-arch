@@ -13,9 +13,10 @@ class RemoteAuthentication implements Authentication<RemoteAuthenticationParams>
   Future<RemoteAccountModel> call({required RemoteAuthenticationParams params}) async {
     try {
       final response = await httpClient(url: url, method: MethodType.get, body: params.toMap());
+      if (response == null) throw HttpError.notFound;
       return RemoteAccountModel.fromMap(map: response);
     } on HttpError catch (error) {
-      throw error == HttpError.unathorized  ? DomainError.invalidCredentials : DomainError.unexpectedError;
+      throw error == HttpError.unathorized ? DomainError.invalidCredentials : DomainError.unexpectedError;
     }
   }
 }

@@ -10,12 +10,11 @@ class HttpAdapter implements HttpClient {
   HttpAdapter({required this.client});
 
   @override
-  Future<Map<String, dynamic>> call(
+  Future<Map<String, dynamic>?> call(
       {required String url, required MethodType method, Map<String, dynamic>? body, Map<String, dynamic>? headers}) async {
-    return (await client.post(url,
-            data: body,
-            options: Options(headers: headers ?? {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'})))
-        .data as Map<String, dynamic>;
+    final response = await client.post(url,
+        data: body, options: Options(headers: headers ?? {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'}));
+    return response.data != null && response.data is Map<String, dynamic> ? response as Map<String, dynamic> : null;
   }
 }
 
@@ -68,6 +67,21 @@ void main() {
           url: url, method: MethodType.post, headers: {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'});
 
       expect(result, {'any_key': 'any_value'});
+      verify(() => client.post(url, options: any(named: 'options')));
+    });
+
+    test('should return null if post returns 200 with no data', () async {
+      when(() => client.post(any(), options: any(named: 'options'), data: any(named: 'data'))).thenAnswer((invocation) async => Response(
+          data: '',
+          statusCode: 200,
+          requestOptions: RequestOptions(
+            path: '',
+          )));
+
+      final result = await sut(
+          url: url, method: MethodType.post, headers: {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'});
+
+      expect(result, null);
       verify(() => client.post(url, options: any(named: 'options')));
     });
   });
