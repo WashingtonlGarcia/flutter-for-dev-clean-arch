@@ -12,9 +12,11 @@ class HttpAdapter implements HttpClient {
   @override
   Future<Map<String, dynamic>?> call(
       {required String url, required MethodType method, Map<String, dynamic>? body, Map<String, dynamic>? headers}) async {
-    final response = await client.post(url,
-        data: body, options: Options(headers: headers ?? {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'}));
-    return response.data != null && response.data is Map<String, dynamic> ? response as Map<String, dynamic> : null;
+    final response = (await client.post(url,
+            data: body,
+            options: Options(headers: headers ?? {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'})))
+        .data;
+    return response != null && response is Map<String, dynamic> ? response : null;
   }
 }
 
@@ -32,57 +34,54 @@ void main() {
   });
 
   group('post', () {
-    test('should call post with correct values', () async {
-      when(() => client.post(url, options: any(named: 'options'), data: any(named: 'data')))
-          .thenAnswer((invocation) async => Response(data: {'any_key': 'any_value'}, requestOptions: RequestOptions(path: '')));
+    When mockRequest() => when(() => client.post(any(), options: any(named: 'options'), data: any(named: 'data')));
 
+    void requestSuccess({required Map<String, dynamic>? data, required int statusCode}) =>
+        mockRequest().thenAnswer((invocation) async => Response(data: data, requestOptions: RequestOptions(path: ''), statusCode: statusCode));
+
+    void verifyPostMethod({Map<String, dynamic>? body}) => verify(() => client.post(url, data: body, options: any(named: 'options')));
+
+    late Map<String, dynamic> map;
+
+    setUp(() {
+      map = {'any_key': 'any_value'};
+      requestSuccess(data: map, statusCode: 200);
+    });
+
+    test('should call post with correct values', () async {
       await sut(
           url: url,
           method: MethodType.post,
-          body: {'any_key': 'any_value'},
+          body: map,
           headers: {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'});
 
-      verify(() => client.post(url, data: {'any_key': 'any_value'}, options: any(named: 'options')));
+      verifyPostMethod(body: map);
     });
 
     test('should call post with without body', () async {
-      when(() => client.post(any(), options: any(named: 'options'), data: any(named: 'data')))
-          .thenAnswer((invocation) async => Response(data: {'any_key': 'any_value'}, requestOptions: RequestOptions(path: '')));
-
       await sut(
           url: url, method: MethodType.post, headers: {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'});
 
-      verify(() => client.post(url, options: any(named: 'options')));
+      verifyPostMethod();
     });
 
     test('should return data if post returns 200', () async {
-      when(() => client.post(any(), options: any(named: 'options'), data: any(named: 'data'))).thenAnswer((invocation) async => Response(
-          data: {'any_key': 'any_value'},
-          statusCode: 200,
-          requestOptions: RequestOptions(
-            path: '',
-          )));
-
       final result = await sut(
           url: url, method: MethodType.post, headers: {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'});
 
       expect(result, {'any_key': 'any_value'});
-      verify(() => client.post(url, options: any(named: 'options')));
+      verifyPostMethod();
     });
 
     test('should return null if post returns 200 with no data', () async {
-      when(() => client.post(any(), options: any(named: 'options'), data: any(named: 'data'))).thenAnswer((invocation) async => Response(
-          data: '',
-          statusCode: 200,
-          requestOptions: RequestOptions(
-            path: '',
-          )));
+      requestSuccess(data: null, statusCode: 200);
 
       final result = await sut(
           url: url, method: MethodType.post, headers: {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'});
 
       expect(result, null);
-      verify(() => client.post(url, options: any(named: 'options')));
+
+      verifyPostMethod();
     });
   });
 }
