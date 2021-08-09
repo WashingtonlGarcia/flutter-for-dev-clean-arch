@@ -12,11 +12,12 @@ class HttpAdapter implements HttpClient {
   @override
   Future<Map<String, dynamic>?> call(
       {required String url, required MethodType method, Map<String, dynamic>? body, Map<String, dynamic>? headers}) async {
-    final response = (await client.post(url,
-            data: body,
-            options: Options(headers: headers ?? {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'})))
-        .data;
-    return response != null && response is Map<String, dynamic> ? response : null;
+    final response = await client.post(url,
+        data: body, options: Options(headers: headers ?? {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'}));
+    if (response.statusCode == 200) {
+      return response.data != null && response.data is Map<String, dynamic> ? response.data as Map<String, dynamic> : null;
+    }
+    return null;
   }
 }
 
@@ -36,7 +37,7 @@ void main() {
   group('post', () {
     When mockRequest() => when(() => client.post(any(), options: any(named: 'options'), data: any(named: 'data')));
 
-    void requestSuccess({required Map<String, dynamic>? data, required int statusCode}) =>
+    void requestSuccess({dynamic data, required int statusCode}) =>
         mockRequest().thenAnswer((invocation) async => Response(data: data, requestOptions: RequestOptions(path: ''), statusCode: statusCode));
 
     void verifyPostMethod({Map<String, dynamic>? body}) => verify(() => client.post(url, data: body, options: any(named: 'options')));
@@ -74,7 +75,17 @@ void main() {
     });
 
     test('should return null if post returns 200 with no data', () async {
-      requestSuccess(data: null, statusCode: 200);
+      requestSuccess(data: '', statusCode: 200);
+
+      final result = await sut(
+          url: url, method: MethodType.post, headers: {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'});
+
+      expect(result, null);
+
+      verifyPostMethod();
+    });
+    test('should return null if post returns 204', () async {
+      requestSuccess(statusCode: 204, data: '');
 
       final result = await sut(
           url: url, method: MethodType.post, headers: {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'});
@@ -84,9 +95,8 @@ void main() {
       verifyPostMethod();
     });
 
-
     test('should return null if post returns 204 with no data', () async {
-      requestSuccess(data: null, statusCode: 204);
+      requestSuccess(statusCode: 204);
 
       final result = await sut(
           url: url, method: MethodType.post, headers: {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'});
