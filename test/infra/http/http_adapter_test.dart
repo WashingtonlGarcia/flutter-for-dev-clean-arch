@@ -1,25 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:faker/faker.dart';
 import 'package:flutter_for_dev_clean_arch/data/http/http.dart';
+import 'package:flutter_for_dev_clean_arch/infra/http/http_adapter.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-
-class HttpAdapter implements HttpClient {
-  final Dio client;
-
-  HttpAdapter({required this.client});
-
-  @override
-  Future<Map<String, dynamic>?> call(
-      {required String url, required MethodType method, Map<String, dynamic>? body, Map<String, dynamic>? headers}) async {
-    final response = await client.post(url,
-        data: body, options: Options(headers: headers ?? {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'}));
-    if (response.statusCode == 200) {
-      return response.data != null && response.data is Map<String, dynamic> ? response.data as Map<String, dynamic> : null;
-    }
-    return null;
-  }
-}
 
 class HttpClientSpy extends Mock implements Dio {}
 
