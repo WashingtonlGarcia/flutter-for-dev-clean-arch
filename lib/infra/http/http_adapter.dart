@@ -17,7 +17,9 @@ class HttpAdapter implements HttpClient {
   Map<String, dynamic>? _handleResponse({required Response response}) {
     if (response.statusCode == 200) {
       return response.data != null && response.data is Map<String, dynamic> ? response.data as Map<String, dynamic> : null;
+    } else if (response.statusCode == 204) {
+      return null;
     }
-    return null;
+    throw HttpError.badRequest;
   }
 }

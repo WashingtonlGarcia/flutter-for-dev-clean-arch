@@ -89,5 +89,15 @@ void main() {
 
       verifyPostMethod();
     });
+
+    test('should return BadRequestError if post returns 400', () {
+      requestSuccess(statusCode: 400);
+      final result =
+      sut(url: url, method: MethodType.post, headers: {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'});
+
+      expect(result, throwsA(HttpError.badRequest));
+
+      verifyPostMethod();
+    });
   });
 }
