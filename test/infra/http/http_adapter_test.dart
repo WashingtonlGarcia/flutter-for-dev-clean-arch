@@ -18,6 +18,13 @@ void main() {
     sut = HttpAdapter(client: client);
   });
 
+  group('shared', () {
+    test('should throw ServerError if invalid method is provide', () async {
+      final result =  sut.call(url: url, method: MethodType.get);
+      expect(result, throwsA(HttpError.serverError));
+    });
+  });
+
   group('post', () {
     When mockRequest() => when(() => client.post(any(), options: any(named: 'options'), data: any(named: 'data')));
 

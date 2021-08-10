@@ -9,8 +9,12 @@ class HttpAdapter implements HttpClient {
   @override
   Future<Map<String, dynamic>?> call(
       {required String url, required MethodType method, Map<String, dynamic>? body, Map<String, dynamic>? headers}) async {
-    final response = await client.post(url,
-        data: body, options: Options(headers: headers ?? {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'}));
+    Response response = Response(statusCode: 500, data: '', requestOptions: RequestOptions(path: ''));
+    if (method == MethodType.post) {
+      response = await client.post(url,
+          data: body,
+          options: Options(headers: headers ?? {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'}));
+    }
     return _handleResponse(response: response);
   }
 
@@ -25,7 +29,7 @@ class HttpAdapter implements HttpClient {
       throw HttpError.unathorized;
     } else if (response.statusCode == 403) {
       throw HttpError.forbidden;
-    }else if (response.statusCode == 404) {
+    } else if (response.statusCode == 404) {
       throw HttpError.notFound;
     }
     throw HttpError.serverError;
