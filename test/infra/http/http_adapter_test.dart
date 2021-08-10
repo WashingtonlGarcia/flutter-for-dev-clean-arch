@@ -108,7 +108,15 @@ void main() {
 
       verifyPostMethod();
     });
+    test('should return NotFoundError if post returns 404', () {
+      requestSuccess(statusCode: 404);
+      final result =
+          sut(url: url, method: MethodType.post, headers: {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'});
 
+      expect(result, throwsA(HttpError.notFound));
+
+      verifyPostMethod();
+    });
     test('should return BadRequestError if post returns 400', () {
       requestSuccess(statusCode: 400);
       final result =
