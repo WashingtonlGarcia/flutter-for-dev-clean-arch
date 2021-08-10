@@ -11,6 +11,10 @@ class HttpAdapter implements HttpClient {
       {required String url, required MethodType method, Map<String, dynamic>? body, Map<String, dynamic>? headers}) async {
     final response = await client.post(url,
         data: body, options: Options(headers: headers ?? {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'}));
+    return _handleResponse(response: response);
+  }
+
+  Map<String, dynamic>? _handleResponse({required Response response}) {
     if (response.statusCode == 200) {
       return response.data != null && response.data is Map<String, dynamic> ? response.data as Map<String, dynamic> : null;
     }
