@@ -19,7 +19,9 @@ class HttpAdapter implements HttpClient {
       return response.data != null && response.data is Map<String, dynamic> ? response.data as Map<String, dynamic> : null;
     } else if (response.statusCode == 204) {
       return null;
+    } else if (response.statusCode == 400) {
+      throw HttpError.badRequest;
     }
-    throw HttpError.badRequest;
+    throw HttpError.serverError;
   }
 }
