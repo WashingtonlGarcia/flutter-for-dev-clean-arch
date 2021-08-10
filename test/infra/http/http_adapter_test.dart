@@ -20,7 +20,7 @@ void main() {
 
   group('shared', () {
     test('should throw ServerError if invalid method is provide', () async {
-      final result =  sut.call(url: url, method: MethodType.get);
+      final result = sut.call(url: url, method: MethodType.get);
       expect(result, throwsA(HttpError.serverError));
     });
   });
@@ -30,6 +30,8 @@ void main() {
 
     void requestSuccess({dynamic data, required int statusCode}) =>
         mockRequest().thenAnswer((invocation) async => Response(data: data, requestOptions: RequestOptions(path: ''), statusCode: statusCode));
+
+    void requestFailure() => mockRequest().thenThrow(Exception());
 
     void verifyPostMethod({Map<String, dynamic>? body}) => verify(() => client.post(url, data: body, options: any(named: 'options')));
 
@@ -133,10 +135,20 @@ void main() {
 
       verifyPostMethod();
     });
-    test('should return BadRequestError if post returns 500', () {
+    test('should return ServerError if post returns 500', () {
       requestSuccess(statusCode: 500);
       final result =
           sut(url: url, method: MethodType.post, headers: {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'});
+
+      expect(result, throwsA(HttpError.serverError));
+
+      verifyPostMethod();
+    });
+
+    test('should return ServerError if post throws', () {
+      requestFailure();
+      final result =
+      sut(url: url, method: MethodType.post, headers: {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'});
 
       expect(result, throwsA(HttpError.serverError));
 

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter_for_dev_clean_arch/data/http/http_error.dart';
 import '../../data/http/http.dart';
 
 class HttpAdapter implements HttpClient {
@@ -10,10 +11,14 @@ class HttpAdapter implements HttpClient {
   Future<Map<String, dynamic>?> call(
       {required String url, required MethodType method, Map<String, dynamic>? body, Map<String, dynamic>? headers}) async {
     Response response = Response(statusCode: 500, data: '', requestOptions: RequestOptions(path: ''));
-    if (method == MethodType.post) {
-      response = await client.post(url,
-          data: body,
-          options: Options(headers: headers ?? {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'}));
+    try {
+      if (method == MethodType.post) {
+        response = await client.post(url,
+            data: body,
+            options: Options(headers: headers ?? {Headers.contentTypeHeader: 'application/json', Headers.acceptHeader: 'application/json'}));
+      }
+    } catch (_) {
+      throw HttpError.serverError;
     }
     return _handleResponse(response: response);
   }
